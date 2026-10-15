@@ -44,15 +44,16 @@ def load_image_rgb(path: str) -> Image.Image:
 def preprocess_image_pair(
     pipeline: Any, xsrc_path: str, xedit_path: str
 ) -> Tuple[Image.Image, Image.Image]:
-    src = load_image_rgb(xsrc_path)
-    tgt = load_image_rgb(xedit_path)
+    images = [load_image_rgb(xsrc_path), load_image_rgb(xedit_path)]
     if hasattr(pipeline, "preprocess_image"):
-        try:
-            src = pipeline.preprocess_image(src)
-            tgt = pipeline.preprocess_image(tgt)
-        except Exception:
-            pass
-    return src, tgt
+        for index, path in enumerate((xsrc_path, xedit_path)):
+            try:
+                images[index] = pipeline.preprocess_image(images[index])
+            except Exception as error:
+                raise RuntimeError(
+                    f"VS3D image preprocessing failed for {path}: {error}"
+                ) from error
+    return images[0], images[1]
 
 
 # ---------------------------------------------------------------------------
